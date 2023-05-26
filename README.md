@@ -1,26 +1,101 @@
-#  Как работать с репозиторием финального задания
+# Kittygram
 
-## Что нужно сделать
+Kittygram - сервис для хозяев, которые хотят похвастаться своими котиками.
 
-Настроить запуск проекта Kittygram в контейнерах и CI/CD с помощью GitHub Actions
+## **Описание проекта**
 
-## Как проверить работу с помощью автотестов
+Проект находиться по адресу: [https://olkiokittygram.hopto.org/](https://olkiokittygram.hopto.org/)
 
-В корне репозитория создайте файл tests.yml со следующим содержимым:
-```yaml
-repo_owner: ваш_логин_на_гитхабе
-kittygram_domain: полная ссылка (https://доменное_имя) на ваш проект Kittygram
-taski_domain: полная ссылка (https://доменное_имя) на ваш проект Taski
-dockerhub_username: ваш_логин_на_докерхабе
+Апи по адресу [https://olkiokittygram.hopto.org/api/](https://olkiokittygram.hopto.org/api/)
+
+## **Стэк технологий**
+
+* [Python 3.9](https://www.python.org/downloads/)
+* [Django 3.2.3](https://www.djangoproject.com/download/)
+* [djangorestframework 3.12.4](https://pypi.org/project/djangorestframework/#files)
+* [djoser 2.1.0](https://pypi.org/project/djoser/#files)
+* [webcolors 1.11.1](https://pypi.org/project/webcolors/1.11.1/)
+* [gunicorn 20.1.0](https://pypi.org/project/gunicorn/20.1.0/)
+* [psycopg2-binary 2.9.6](https://pypi.org/project/psycopg2-binary/#files)
+* [pytest-django 4.4.0](https://pypi.org/project/pytest-django/)
+* [pytest-pythonpath 0.7.3](https://pypi.org/project/pytest-pythonpath/)
+* [pytest 6.2.4](https://pypi.org/project/pytest/)
+* [PyYAML 6.0](https://pypi.org/project/PyYAML/)
+* [python-dotenv 1.0.0](https://pypi.org/project/python-dotenv/)
+
+## Локальный запуск проекта
+
+Клонировать репозиторий и перейти в него в командной строке:
+
+```apache
+git clone https://github.com/olkio/infra_sprint1.git
+cd kittygram_docker
 ```
 
-Скопируйте содержимое файла `.github/workflows/main.yml` в файл `kittygram_workflow.yml` в корневой директории проекта.
+Cоздать и активировать виртуальное окружение, установить зависимости:
 
-Для локального запуска тестов создайте виртуальное окружение, установите в него зависимости из backend/requirements.txt и запустите в корневой директории проекта `pytest`.
+```apache
+python3 -m venv venv && \ 
+    source venv/scripts/activate && \
+    python -m pip install --upgrade pip && \
+    pip install -r backend/requirements.txt
+```
 
-## Чек-лист для проверки перед отправкой задания
+Установите [docker compose](https://www.docker.com/) на свой компьютер.
 
-- Проект Taski доступен по доменному имени, указанному в `tests.yml`.
-- Проект Kittygram доступен по доменному имени, указанному в `tests.yml`.
-- Пуш в ветку main запускает тестирование и деплой Kittygram, а после успешного деплоя вам приходит сообщение в телеграм.
-- В корне проекта есть файл `kittygram_workflow.yml`.
+Запустите проект через docker-compose:
+
+```apache
+docker compose -f docker-compose.yml up --build -d
+```
+
+Выполнить миграции:
+
+```apache
+docker compose -f docker-compose.yml exec backend python manage.py migrate
+```
+
+Соберите статику и скопируйте ее:
+
+```
+docker compose -f docker-compose.yml exec backend python manage.py collectstatic  && \
+docker compose -f docker-compose.yml exec backend cp -r /app/static_backend/. /backend_static/static/
+```
+
+## .env
+
+В корне проекта создайте файл .env и пропишите в него свои данные.
+
+Пример:
+
+```apache
+POSTGRES_DB=kittygram
+POSTGRES_USER=kittygram_user
+POSTGRES_PASSWORD=kittygram_password
+DB_NAME=kittygram
+```
+
+## Workflow
+
+Для использования Continuous Integration (CI) и Continuous Deployment (CD): в репозитории GitHub Actions `Settings/Secrets/Actions` прописать Secrets - переменные окружения для доступа к сервисам:
+
+```
+SECRET_KEY                     # стандартный ключ, который создается при старте проекта
+
+DOCKER_USERNAME                # имя пользователя в DockerHub
+DOCKER_PASSWORD                # пароль пользователя в DockerHub
+HOST                           # ip_address сервера
+USER                           # имя пользователя
+SSH_KEY                        # приватный ssh-ключ (cat ~/.ssh/id_rsa)
+PASSPHRASE                     # кодовая фраза (пароль) для ssh-ключа
+
+TELEGRAM_TO                    # id телеграм-аккаунта (можно узнать у @userinfobot, команда /start)
+TELEGRAM_TOKEN                 # токен бота (получить токен можно у @BotFather, /token, имя бота)
+```
+
+При push в ветку main автоматически отрабатывают сценарии:
+
+* *tests* - проверка кода на соответствие стандарту PEP8 и запуск pytest. Дальнейшие шаги выполняются только если push был в ветку main;
+* *build\_and\_push\_to\_docker\_hub* - сборка и доставка докер-образов на DockerHub
+* *deploy* - автоматический деплой проекта на боевой сервер. Выполняется копирование файлов из DockerHub на сервер;
+* *send\_message* - отправка уведомления в Telegram.
