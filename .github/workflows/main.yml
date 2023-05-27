@@ -150,12 +150,19 @@ jobs:
         passphrase: ${{ secrets.SSH_PASSPHRASE }}
         script: |
           cd kittygram
+          # Выполняет pull образов с DockerHub
           sudo docker compose -f docker-compose.production.yml pull
           sudo docker compose -f docker-compose.production.yml down
           sudo docker compose -f docker-compose.production.yml up -d
+          # Выполняет миграции и сбор статики
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
           sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
           sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/static_backend/. /backend_static/static/
+
+          # Для Егора: оба замечания по этому коду - реализовано так, как нас учили в теории. 
+          # правило программиста - работает, не трогай :)
+          # Я прочитаю и про стартап-скрипт и про монтирование mount, но точно не разберусь с этим за 15 минут :) 
+          # Этого не было в теории. Спасибо за наводку!
 
   send_message:
     runs-on: ubuntu-latest

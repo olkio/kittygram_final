@@ -4,9 +4,11 @@ Kittygram - сервис для хозяев, которые хотят похв
 
 ## **Описание проекта**
 
-Проект находиться по адресу: [https://olkiokittygram.hopto.org/](https://olkiokittygram.hopto.org/)
+Проект Kittygram находиться по адресу: [https://olkiokittygram.hopto.org/](https://olkiokittygram.hopto.org/)
 
 Апи по адресу [https://olkiokittygram.hopto.org/api/](https://olkiokittygram.hopto.org/api/)
+
+Проект Taski находится по адресу: [https://taskolkio.hopto.org/](https://taskolkio.hopto.org/)
 
 ## **Стэк технологий**
 
@@ -27,14 +29,14 @@ Kittygram - сервис для хозяев, которые хотят похв
 
 Клонировать репозиторий и перейти в него в командной строке:
 
-```apache
+```bash
 git clone https://github.com/olkio/infra_sprint1.git
 cd kittygram_docker
 ```
 
 Cоздать и активировать виртуальное окружение, установить зависимости:
 
-```apache
+```bash
 python3 -m venv venv && \ 
     source venv/scripts/activate && \
     python -m pip install --upgrade pip && \
@@ -45,19 +47,19 @@ python3 -m venv venv && \
 
 Запустите проект через docker-compose:
 
-```apache
+```bash
 docker compose -f docker-compose.yml up --build -d
 ```
 
 Выполнить миграции:
 
-```apache
+```bash
 docker compose -f docker-compose.yml exec backend python manage.py migrate
 ```
 
 Соберите статику и скопируйте ее:
 
-```
+```bash
 docker compose -f docker-compose.yml exec backend python manage.py collectstatic  && \
 docker compose -f docker-compose.yml exec backend cp -r /app/static_backend/. /backend_static/static/
 ```
